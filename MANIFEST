@@ -1,0 +1,10 @@
+Changes
+Makefile.PL
+MANIFEST
+MANIFEST.SKIP
+README
+lib/Class/Publisher.pm
+t/publisher.t
+t/exchange.t
+t/Telephone.pm
+META.yml                                 Module meta-data (added by MakeMaker)
