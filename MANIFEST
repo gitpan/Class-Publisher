@@ -4,6 +4,8 @@ MANIFEST
 MANIFEST.SKIP
 README
 lib/Class/Publisher.pm
+t/pod.t
+t/pod_coverage.t
 t/publisher.t
 t/exchange.t
 t/Telephone.pm

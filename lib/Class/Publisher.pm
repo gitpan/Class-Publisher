@@ -1,4 +1,4 @@
-# $Id: Publisher.pm,v 1.2 2004/09/19 19:06:53 simonflack Exp $
+# $Id: Publisher.pm,v 1.3 2005/03/25 13:20:21 simonflack Exp $
 package Class::Publisher;
 use strict;
 use Carp;
@@ -6,11 +6,7 @@ use Class::ISA;
 use Scalar::Util qw/blessed reftype weaken/;
 use vars '$VERSION';
 
-$VERSION = '0.1';
-
-my ($DEBUG);
-sub DEBUG     { return $DEBUG; }
-sub SET_DEBUG { $DEBUG = $_[0] }
+$VERSION = '0.2';
 my (%S, %P) = ();
 
 
@@ -31,8 +27,8 @@ sub add_subscriber {
         $new_subscriber = $subscriber;
     }
 
-    DEBUG && TRACEF("Adding subscriber [%s] of '%s' on [%s]",
-                    $subscriber, _event_name($event), _item_name($item));
+    TRACEF("Adding subscriber [%s] of '%s' on [%s]",
+           $subscriber, _event_name($event), _item_name($item));
     $subscriber_list->{$subscriber} = $new_subscriber;
 
     return scalar keys %$subscriber_list;
@@ -56,13 +52,13 @@ sub delete_subscriber {
         }
 
         foreach my $subscribed_event (@events) {
-            DEBUG && TRACEF("Removing subscriber [%s] of '%s' on [%s]",
-                            $subscriber,
-                            _event_name($subscribed_event),
-                            _item_name($item));
+            TRACEF("Removing subscriber [%s] of '%s' on [%s]",
+                   $subscriber,
+                   _event_name($subscribed_event),
+                   _item_name($item));
 
             my $removed = delete $S {$item} {$subscribed_event} {$subscriber};
-            DEBUG && TRACEF("Found subscriber [%s]; removing", $subscriber);
+            TRACEF("Found subscriber [%s]; removing", $subscriber);
         }
     }
     return defined wantarray ? 0 + $item -> get_subscribers($event) : undef;
@@ -73,7 +69,7 @@ sub delete_subscriber {
 # subscribers removed.
 sub delete_all_subscribers {
     my ($item) = @_;
-    DEBUG && TRACEF("Removing all subscribers from [%s]", _item_name($item));
+    TRACEF("Removing all subscribers from [%s]", _item_name($item));
     my $rv = defined wantarray ? 0 + $item -> get_subscribers : undef;
     return 0 unless ref $S {$item};
     $S {$item} = {};
@@ -87,8 +83,8 @@ sub notify_subscribers {
     my ($item, $event, @params) = @_;
     croak "Invalid event name '$event'" if $event && ref $event;
     $event = '*' unless defined $event && length $event;
-    DEBUG && TRACEF("Notification from [%s] with event [%s]",
-                    _item_name($item), _event_name($event));
+    TRACEF("Notification from [%s] with event [%s]",
+           _item_name($item), _event_name($event));
 
     my @subscribers = $item -> get_subscribers($event);
     unless ($event eq '*') {
@@ -97,9 +93,9 @@ sub notify_subscribers {
 
     my %called;
     foreach my $s (@subscribers) {
-        DEBUG && TRACEF("Notifying subscriber [%s]", $s);
+        TRACEF("Notifying subscriber [%s]", $s);
         if ($called {$s}++) {
-            DEBUG && TRACEF("Already called subscriber [%s]", $s);
+            TRACEF("Already called subscriber [%s]", $s);
             next;
         }
         if (reftype $s && reftype $s eq 'CODE') {
@@ -121,21 +117,21 @@ sub notify_subscribers {
 # *all* means.) Returns a list of subscribers
 sub get_subscribers {
     my ($item, $event) = @_;
-    DEBUG && TRACEF("Retrieving subscribers of [%s] on [%s]",
-                    _event_name($event), _item_name($item));
+    TRACEF("Retrieving subscribers of [%s] on [%s]",
+           _event_name($event), _item_name($item));
 
     my @subscribers = ();
     my $class = ref $item;
     if ($class) {
-        DEBUG && TRACEF("Retrieving object-specific subscribers from [%s]",
-                        _item_name($item));
+        TRACEF("Retrieving object-specific subscribers from [%s]",
+               _item_name($item));
         push @subscribers, _obs_get_subscribers_scoped($item, $event);
     }
     else {
         $class = $item;
     }
-    DEBUG && TRACEF("Retrieving class-specific subscribers from [%s] and its "
-                    . "parents", $class);
+    TRACEF("Retrieving class-specific subscribers from [%s] and its "
+           . "parents", $class);
     push @subscribers, _obs_get_subscribers_scoped($class, $event),
             _obs_get_parent_subscribers($class, $event);
 
@@ -143,7 +139,7 @@ sub get_subscribers {
     foreach (@subscribers) {
         push @filtered, $_, unless $seen {$_}++;
     }
-    DEBUG && TRACEF("Found subscribers [%s]", join '][', @filtered);
+    TRACEF("Found subscribers [%s]", join '][', @filtered);
     return @filtered;
 }
 
@@ -167,14 +163,15 @@ sub copy_subscribers {
 
 sub count_subscribers {
     my ($item, $event) = @_;
-    DEBUG && TRACEF("Counting subscribers of [%s] on [%s]",
-                    _event_name($event), _item_name($item));
+    TRACEF("Counting subscribers of [%s] on [%s]",
+           _event_name($event), _item_name($item));
     return scalar $item -> get_subscribers($event);
 }
 
 
-sub TRACE  { print STDERR @_, $/ }
-sub TRACEF { TRACE(sprintf shift, @_) }
+# Log::Trace stubs
+sub TRACE  {}
+sub TRACEF {}
 
 ############################################################################
 # Private functions
@@ -195,7 +192,7 @@ sub _obs_get_parent_subscribers {
 
     unless (ref $P {$class}) {
         my @parent_path = Class::ISA::super_path($class);
-        DEBUG && TRACEF("Finding subscribers from parent classes [%s]",
+        TRACEF("Finding subscribers from parent classes [%s]",
                          join '] [', @parent_path );
         my @subscribed_parents = ();
         foreach my $parent (@parent_path) {
@@ -204,8 +201,9 @@ sub _obs_get_parent_subscribers {
                 push @subscribed_parents, $parent;
             }
         }
+        push @subscribed_parents, __PACKAGE__;
         $P {$class} = \@subscribed_parents;
-        DEBUG && TRACEF("Found subscribed parents for [%s]: [%s]",
+        TRACEF("Found subscribed parents for [%s]: [%s]",
                         $class, join '] [', @subscribed_parents);
     }
 
@@ -526,18 +524,11 @@ event was given).
 
 =head1 DEBUGGING
 
-=over 4
+C<Class::Publisher> has C<Log::Trace> hooks. You can enable debugging with a statement like this:
 
-=item Class::Publisher::SET_DEBUG($bool)
+  use Log::Trace warn => {Deep => 1, Match => 'Class::Publisher'};
 
-Turn debugging on or off. This will print to STDERR at appropriate times during
-the process.
-
-Note that the warnings will try to get information about an object if that is
-what calls notify_subscribers(). If you have an id() method in the object it
-will be called, otherwise it will be described as "an instance of class Foo".
-
-=back
+See L<Log::Trace> for more options
 
 =head1 AUTHOR
 

@@ -1,12 +1,13 @@
 #!/usr/local/bin/perl -w
-# $Id: publisher.t,v 1.2 2004/09/19 19:05:44 simonflack Exp $
+# $Id: publisher.t,v 1.3 2005/03/25 13:20:21 simonflack Exp $
 # Description: API test
 
 use Test::More tests => 22;
 use strict;
 
 require_ok('Class::Publisher');
-# Class::Publisher::SET_DEBUG(1);
+#require Log::Trace;
+#import Log::Trace print => {Deep => 1, Match => qr/Class::Publisher/};
 
 package Mini_Publisher;
 @Mini_Publisher::ISA = 'Class::Publisher';

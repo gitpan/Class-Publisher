@@ -1,5 +1,5 @@
 #!/usr/local/bin/perl -w
-# $Id: exchange.t,v 1.1 2004/09/19 19:05:44 simonflack Exp $
+# $Id: exchange.t,v 1.2 2005/03/25 13:20:21 simonflack Exp $
 # Description: Basic integration test
 
 use Test::More tests => 20;
@@ -10,8 +10,8 @@ my $test_class = 'Class::Publisher';
 require_ok($test_class);
 require_ok('Telephone');
 
-# Class::Publisher::SET_DEBUG(1);
-# $Telephone::DEBUG = $Telephone::DEBUG = 1;
+#require Log::Trace;
+#import Log::Trace print => {Deep => 1, Match => qr/Class::Publisher/};
 
 my $exchange = new Telephone::Exchange;
 my $test_phone = new Telephone('0123 555 0000');
